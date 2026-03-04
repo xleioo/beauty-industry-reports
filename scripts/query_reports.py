@@ -92,6 +92,28 @@ def search_rows(rows, mode: str, query: str, topk: int):
     return hits[:topk]
 
 
+def _normalize_tags(tags):
+    if tags is None:
+        return []
+    if isinstance(tags, str):
+        return [tags]
+    if isinstance(tags, list):
+        return [t for t in tags if isinstance(t, str)]
+    return []
+
+
+def filter_rows_by_tags(rows, tags):
+    if not tags:
+        return rows
+    wanted = {t.lower() for t in tags}
+    out = []
+    for row in rows:
+        row_tags = {t.lower() for t in _normalize_tags(row.get("tags"))}
+        if row_tags & wanted:
+            out.append(row)
+    return out
+
+
 def print_text_hits(query: str, hits):
     by_report = defaultdict(list)
     for s, row in hits:
@@ -134,10 +156,15 @@ def main():
     p.add_argument("query", help="查询问题")
     p.add_argument("--topk", type=int, default=8, help="文本检索返回条数")
     p.add_argument("--chart-topk", type=int, default=5, help="图表检索返回条数")
+    p.add_argument("--tag", action="append", default=[], help="按标签过滤，可重复：--tag lulu --tag x")
     args = p.parse_args()
 
     text_rows = load_jsonl(TEXT_INDEX_PATH)
     chart_rows = load_jsonl(CHART_INDEX_PATH)
+
+    if args.tag:
+        text_rows = filter_rows_by_tags(text_rows, args.tag)
+        chart_rows = filter_rows_by_tags(chart_rows, args.tag)
 
     if not text_rows and not chart_rows:
         print("索引为空，请先运行入库流程。")
