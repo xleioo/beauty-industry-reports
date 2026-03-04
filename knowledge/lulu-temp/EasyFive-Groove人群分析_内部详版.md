@@ -1,3 +1,8 @@
+---
+tags:
+  - lulu
+---
+
 # EasyFive & Groove Wide Leg 人群分析报告（内部详版）
 
 > 数据来源：2026年2月品线数据（11个Excel文件）+ 4份已审查分析报告
